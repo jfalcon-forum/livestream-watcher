@@ -37,9 +37,22 @@ const getLiveEventStream = async (mediaId) => {
   const response = await axios({
     method: "get",
     url: `https://cdn.jwplayer.com/v2/media/${mediaId}`,
-  }).then((response) => {
-    return response.data;
-  });
+  })
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      if (error.response) {
+        return {
+          error: {
+            status: error.response.status,
+            data: error.response.data,
+          },
+        };
+      } else {
+        return "Error", error.message;
+      }
+    });
   return response;
 };
 
@@ -67,9 +80,13 @@ const whizArr = async (siteId) => {
     filteredChannels.map(async (channel) => {
       let event = channel.recent_events[0];
       if (event.status !== "active") {
-        return {};
+        return;
       }
       let liveEvent = await getLiveEventStream(event.media_id);
+      if (liveEvent.error) {
+        console.log(liveEvent.error);
+        return;
+      }
       return constructWhizObject(liveEvent);
     })
   );
