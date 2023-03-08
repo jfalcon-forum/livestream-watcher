@@ -16,7 +16,7 @@ JWPLAYER_SECRET=SECRET_VALUE
 npm install
 ```
 
-To run type `node index.js`
+To run `node index.js`
 
 ## Additional Notes
 
