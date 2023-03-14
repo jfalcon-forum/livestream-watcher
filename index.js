@@ -56,14 +56,22 @@ const getLiveEventStream = async (mediaId) => {
   return response;
 };
 
-const constructWhizObject = (liveEvent) => {
+const constructWhizObject = (liveEvent, title) => {
   if (liveEvent.message) {
     return;
   }
+  let eventText;
+  if (liveEvent.description.length > 0) {
+    eventText = liveEvent.description;
+  } else {
+    eventText = liveEvent.title;
+  }
   let whizObj = {
     action: `scheme://video?url=${liveEvent.playlist[0].sources[0].file}`,
-    alertTitle: liveEvent.title,
-    text: liveEvent.description,
+    // use channel title name + override channel name with description
+    alertTitle: title,
+    // title from the instant live event used if no description exists
+    text: eventText,
   };
   return whizObj;
 };
@@ -78,6 +86,7 @@ const whizArr = async (siteId) => {
   );
   const arr = await Promise.all(
     filteredChannels.map(async (channel) => {
+      let title = channel.metadata.title;
       let event = channel.recent_events[0];
       if (event.status !== "active") {
         return;
@@ -87,7 +96,7 @@ const whizArr = async (siteId) => {
         console.log(liveEvent.error);
         return;
       }
-      return constructWhizObject(liveEvent);
+      return constructWhizObject(liveEvent, title);
     })
   );
   return arr.filter((item) => item !== undefined);
