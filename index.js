@@ -67,7 +67,9 @@ const constructWhizObject = (liveEvent, title) => {
     eventText = liveEvent.title;
   }
   let whizObj = {
-    action: `scheme://video?url=${liveEvent.playlist[0].sources[0].file}`,
+    action: `scheme://video?url=${encodeURIComponent(
+      liveEvent.playlist[0].sources[0].file
+    )}`,
     // use channel title name + override channel name with description
     alertTitle: title,
     // title from the instant live event used if no description exists
