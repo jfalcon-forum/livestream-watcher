@@ -9,7 +9,8 @@ const SITE_ID = "l0XScfRd";
 const getLiveChannels = async (siteId) => {
   const response = await axios({
     method: "get",
-    url: `https://api.jwplayer.com/v2/sites/${siteId}/channels/`,
+    // Supports up to 25 channels before we need to scale and consider pagination
+    url: `https://api.jwplayer.com/v2/sites/${siteId}/channels/?page=1&page_length=25&sort=created%3Adsc`,
     headers: {
       accept: "application/json",
       Authorization: process.env.JWPLAYER_SECRET,
@@ -56,12 +57,17 @@ const getLiveEventStream = async (mediaId) => {
   return response;
 };
 
-const constructWhizObject = (liveEvent, title) => {
+const constructWhizObject = (liveEvent, channel) => {
   if (liveEvent.message) {
     return;
   }
+  let title = channel.metadata.title;
   let eventText;
-  if (liveEvent.description.length > 0) {
+  // hard coded specifically for WDAY+ Channel
+  if (channel.id === "oQI9YDnI") {
+    title = "Live Now";
+    eventText = "WDAY+";
+  } else if (liveEvent.description.length > 0) {
     eventText = liveEvent.description;
   } else {
     eventText = liveEvent.title;
@@ -88,7 +94,6 @@ const whizArr = async (siteId) => {
   );
   const arr = await Promise.all(
     filteredChannels.map(async (channel) => {
-      let title = channel.metadata.title;
       let event = channel.recent_events[0];
       if (event.status !== "active") {
         return;
@@ -98,7 +103,7 @@ const whizArr = async (siteId) => {
         console.log(liveEvent.error);
         return;
       }
-      return constructWhizObject(liveEvent, title);
+      return constructWhizObject(liveEvent, channel);
     })
   );
   return arr.filter((item) => item !== undefined);
